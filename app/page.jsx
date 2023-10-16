@@ -7,6 +7,7 @@ import TwoColumnLayout from "./components/TwoColumnLayout";
 import ResultWithSources from "./components/ResultWithSources";
 import Table from "./components/Table";
 import "./globals.css";
+// import CreditCardModal from "./components/CreditCardModal";
 
 const Memory = () => {
   const [prompt, setPrompt] = useState("");
@@ -21,6 +22,9 @@ const Memory = () => {
   const [date_to, setdate_to] = useState(null);
   const [sort, setsort] = useState(null);
   const [offers, SetOffers] = useState([]);
+  const [showbutton, setShowButtons] = useState(false);
+  const [selectedSeat, setSelectedSeat] = useState({});
+  const [isModalOpen, setModalOpen] = useState(false);
 
   // fly_from="", fly_to="", date_from="", date_to="", sort=""
 
@@ -44,16 +48,13 @@ const Memory = () => {
         sort: sort,
       };
       console.log({ input: prompt, firstMsg, data });
-      const response = await fetch(
-        "https://booked-ai.ts.r.appspot.com/api/ai/chat",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ input: prompt, firstMsg, data: data }),
-        }
-      );
+      const response = await fetch("http://localhost:8000/api/ai/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ input: prompt, firstMsg, data: data }),
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP Error! Status: ${response.status}`);
@@ -101,13 +102,15 @@ const Memory = () => {
     }
   };
 
-  const handleFlightClick = (index, price) => {
+  const handleFlightClick = (index, price, item) => {
+    setSelectedSeat(item);
+    console.log("eddddddd", item);
     setMessages((prevMessages) => [
       ...prevMessages,
       {
         text:
-          "Do you want to confirm with flight " +
-          index +
+          "Do you want to confirm  " +
+          item.owner.name +
           " with price " +
           price +
           " ?",
@@ -116,11 +119,71 @@ const Memory = () => {
       },
     ]);
     SetOffers([]);
+    setShowButtons(true);
+  };
+
+  const confirmBooking = async () => {
+    // setModalOpen(true);
+    // const response = await fetch("http://localhost:8000/api/ai/bookflight", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({ data: selectedSeat }),
+    // });
+    // const searchRes = await response.json();
+    // setShowButtons(false);
+    // setMessages((prevMessages) => [
+    //   ...prevMessages,
+    //   { text: searchRes.response, type: "bot", sourceDocuments: null },
+    // ]);
+    const response = await fetch("http://localhost:8000/api/ai/bookflight", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ data: selectedSeat, selectedId: selectedSeat.id }),
+    });
+    const searchRes = await response.json();
+    setShowButtons(false);
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        text: searchRes.response + " with " + selectedSeat.owner.name,
+        type: "bot",
+        sourceDocuments: null,
+      },
+    ]);
+  };
+
+  const ConfirmMainBooking = async () => {
+    const response = await fetch("http://localhost:8000/api/ai/bookflight", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ data: selectedSeat }),
+    });
+    const searchRes = await response.json();
+    setShowButtons(false);
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        text: searchRes.response + " with " + selectedSeat.owner.name,
+        type: "bot",
+        sourceDocuments: null,
+      },
+    ]);
+    setModalOpen(false);
   };
 
   return (
     <>
       <Title headingText={"Memory"} emoji="🧠" />
+      {/* <CreditCardModal
+        isOpen={isModalOpen}
+        onClose={() => setModalOpen(false)}
+      /> */}
       <TwoColumnLayout
         leftChildren={
           <>
@@ -138,6 +201,11 @@ const Memory = () => {
               pngFile="brain"
               offers={offers}
               handleFlightClick={handleFlightClick}
+              showbutton={showbutton}
+              confirmBooking={confirmBooking}
+              selectedSeat={selectedSeat}
+              isModalOpen={isModalOpen}
+              ConfirmMainBooking={ConfirmMainBooking}
             />
             <PromptBox
               prompt={prompt}

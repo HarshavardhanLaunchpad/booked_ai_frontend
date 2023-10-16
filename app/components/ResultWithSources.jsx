@@ -1,10 +1,36 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 
-const MessageItem = ({ message, pngFile, isLast, offers, handleFlightClick }) => {
+const MessageItem = ({
+  message,
+  pngFile,
+  isLast,
+  offers,
+  handleFlightClick,
+  showbutton,
+  confirmBooking,
+  selectedSeat,
+  isModalOpen,
+  ConfirmMainBooking,
+}) => {
   const userImage = "/assets/images/green-square.png";
   const botImage = `/assets/images/${pngFile}.png`;
   const [showSources, setShowSources] = useState(false);
+  const styles = {
+    container: {
+      display: "flex",
+      overflowX: "auto",
+      whiteSpace: "nowrap",
+    },
+    card: {
+      width: "300px",
+      padding: "20px",
+      border: "1px solid #ddd",
+      borderRadius: "10px",
+      marginRight: "20px",
+      display: "inline-block",
+    },
+  };
 
   return (
     <div className={`flex flex-col ${isLast ? "flex-grow" : ""}`}>
@@ -25,19 +51,135 @@ const MessageItem = ({ message, pngFile, isLast, offers, handleFlightClick }) =>
           style={{ maxWidth: "90%" }}
         >
           {message.text}
-
-          {offers.length > 0 &&
-            offers.slice(0, 3).map((item, index) => (
-              <div key={index} className="content-center">
-                <button
-                  onClick={()=>{handleFlightClick(index + 1, item.total_amount)}}
-                  className={`py-3 m-4 px-6 bg-white shadow text-gray-900 font-semibold rounded-full hover:shadow-xl transition-colors duration-200 `}
+          <div style={styles.container}>
+            {offers &&
+              offers.length > 0 &&
+              offers.slice(0, 3).map((item, index) => (
+                <div key={index} className="content-center" style={styles.card}>
+                  {console.log(item)}
+                  <div>
+                    <label> Flight Name:- </label> <p> {item.owner.name}</p>
+                  </div>
+                  <div>
+                    <label> Price :-</label>
+                    <p>
+                      {item.total_amount} {item.total_currency}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      handleFlightClick(index + 1, item.total_amount, item);
+                    }}
+                    className={`py-3 m-4 px-6 bg-blue-500 shadow text-gray-900 font-semibold rounded-full hover:shadow-xl transition-colors duration-200 `}
+                  >
+                    Select Offer
+                    {/* flight {index + 1} Price {item.total_amount} */}
+                  </button>
+                </div>
+              ))}
+          </div>
+          {showbutton && (
+            <div>
+              <div className="content-center ">
+                <div
+                  style={{
+                    display: "flex",
+                    overflowX: "auto",
+                    whiteSpace: "nowrap",
+                  }}
                 >
-                  flight {index + 1} Price {item.total_amount}
-                </button>
+                  <div
+                    style={{
+                      width: "300px",
+                      padding: "20px",
+                      border: "1px solid #ddd",
+                      borderRadius: "10px",
+                      marginRight: "20px",
+                      marginTop: "10px",
+                      display: "inline-block",
+                    }}
+                  >
+                    <h2>{selectedSeat.owner.name}</h2>
+                    <p>From: {selectedSeat.slices[0].origin.city_name}</p>
+                    <p>To: {selectedSeat.slices[0].destination.city_name}</p>
+                    <p>
+                      Date:{" "}
+                      {selectedSeat.slices[0].segments[0].departing_at.date}
+                    </p>
+                    {/* <p>Duration: {flight.duration}</p> */}
+                    <p>
+                      Price: ${selectedSeat.total_amount} $
+                      {selectedSeat.total_currency}
+                    </p>
+                  </div>
+                </div>
               </div>
-            ))}
-
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-6">
+                  {" "}
+                  <button className="py-3 m-4 px-6 shadow bg-blue-500 text-gray-900 font-semibold rounded-full hover:shadow-xl transition-colors duration-200">
+                    {" "}
+                    More Info
+                  </button>
+                </div>
+                <div className="col-6">
+                  <button
+                    className="py-3 m-4 px-6 shadow bg-blue-500 text-gray-900 font-semibold rounded-full hover:shadow-xl transition-colors duration-200"
+                    onClick={() => confirmBooking()}
+                  >
+                    {" "}
+                    Confirm{" "}
+                  </button>{" "}
+                </div>
+              </div>
+            </div>
+          )}
+          {isModalOpen && (
+            <div>
+              <div className="bg-white p-8 w-96 rounded shadow-lg">
+                <h2 className="text-xl mb-4">Enter Credit Card Details</h2>
+                <div>
+                  <div className="mb-4">
+                    <label className="block text-sm mb-2">Card Number</label>
+                    <input
+                      type="text"
+                      className="p-2 w-full border rounded"
+                      placeholder="1234 1234 1234 1234"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm mb-2">Name on Card</label>
+                    <input type="text" className="p-2 w-full border rounded" />
+                  </div>
+                  <div className="flex space-x-4">
+                    <div className="mb-4">
+                      <label className="block text-sm mb-2">Expiry Date</label>
+                      <input
+                        type="text"
+                        className="p-2 w-full border rounded"
+                        placeholder="MM/YY"
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label className="block text-sm mb-2">CVV</label>
+                      <input
+                        type="text"
+                        className="p-2 w-full border rounded"
+                        placeholder="123"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    // type="submit"
+                    className="bg-blue-500 text-white p-2 w-full rounded"
+                    onClick={() => ConfirmMainBooking()}
+                  >
+                    Submit
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {/* {JSON.stringify(message)} */}
         </p>
       </div>
@@ -70,7 +212,18 @@ const MessageItem = ({ message, pngFile, isLast, offers, handleFlightClick }) =>
   );
 };
 
-const ResultWithSources = ({ messages, pngFile, maxMsgs, offers, handleFlightClick }) => {
+const ResultWithSources = ({
+  messages,
+  pngFile,
+  maxMsgs,
+  offers,
+  handleFlightClick,
+  showbutton,
+  confirmBooking,
+  isModalOpen,
+  selectedSeat,
+  ConfirmMainBooking,
+}) => {
   const messagesContainerRef = useRef();
 
   useEffect(() => {
@@ -98,6 +251,11 @@ const ResultWithSources = ({ messages, pngFile, maxMsgs, offers, handleFlightCli
             pngFile={pngFile}
             offers={offers}
             handleFlightClick={handleFlightClick}
+            showbutton={showbutton}
+            confirmBooking={confirmBooking}
+            isModalOpen={isModalOpen}
+            selectedSeat={selectedSeat}
+            ConfirmMainBooking={ConfirmMainBooking}
           />
         ))}
     </div>
