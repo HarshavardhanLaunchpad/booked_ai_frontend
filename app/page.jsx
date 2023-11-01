@@ -24,7 +24,9 @@ const Memory = () => {
   const [offers, SetOffers] = useState([]);
   const [showbutton, setShowButtons] = useState(false);
   const [selectedSeat, setSelectedSeat] = useState({});
+  const [selectedFlight, setSelectedFlight] = useState({});
   const [isModalOpen, setModalOpen] = useState(false);
+  const [seats, setSeats] = useState([]);
 
   // fly_from="", fly_to="", date_from="", date_to="", sort=""
 
@@ -44,8 +46,6 @@ const Memory = () => {
         fly_from: fly_from,
         fly_to: fly_to,
         date_from: date_from,
-        date_to: date_to,
-        sort: sort,
       };
       console.log({ input: prompt, firstMsg, data });
       const response = await fetch("http://localhost:8000/api/ai/chat", {
@@ -102,23 +102,70 @@ const Memory = () => {
     }
   };
 
-  const handleFlightClick = (index, price, item) => {
-    setSelectedSeat(item);
-    console.log("eddddddd", item);
+  const handleFlightClick = async (index, price, item) => {
+    setSelectedFlight(item);
+    const response = await fetch("http://localhost:8000/api/ai/seats", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ selected_flight: item }),
+    });
+    const searchRes = await response.json();
+    console.log("eeeeddd", response);
+    // setShowButtons(false);
+
+    if (response?.ok) {
+      SetOffers([]);
+      setSeats(searchRes?.seats);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          text: "selected flight " + item.owner.name,
+          type: "user",
+          sourceDocuments: null,
+        },
+      ]);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          text: "Please select the seat",
+          type: "bot",
+          sourceDocuments: null,
+        },
+      ]);
+    }
+  };
+
+  const handleSeatSelectionBtn = (seatItem) => {
+    setSelectedSeat(seatItem);
+
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        text: "selected seat " + seatItem.designator,
+        type: "user",
+        sourceDocuments: null,
+      },
+    ]);
+    console.log(selectedFlight, seatItem, "ddddd");
     setMessages((prevMessages) => [
       ...prevMessages,
       {
         text:
           "Do you want to confirm  " +
-          item.owner.name +
+          selectedFlight.owner.name +
           " with price " +
-          price +
+          selectedFlight.total_amount +
+          selectedFlight.total_currency +
+          " seat " +
+          seatItem.designator +
           " ?",
         type: "bot",
         sourceDocuments: null,
       },
     ]);
-    SetOffers([]);
+    setSeats([]);
     setShowButtons(true);
   };
 
@@ -157,19 +204,30 @@ const Memory = () => {
   };
 
   const ConfirmMainBooking = async () => {
-    const response = await fetch("http://localhost:8000/api/ai/bookflight", {
+    const response = await fetch("http://localhost:8000/api/ai/create-order", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ data: selectedSeat }),
+      body: JSON.stringify({
+        selected_offer: selectedFlight,
+        available_seat_service: selectedSeat.available_services[0],
+      }),
     });
     const searchRes = await response.json();
     setShowButtons(false);
     setMessages((prevMessages) => [
       ...prevMessages,
       {
-        text: searchRes.response + " with " + selectedSeat.owner.name,
+        text: "Confirm",
+        type: "user",
+        sourceDocuments: null,
+      },
+    ]);
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        text: searchRes.response + " with " + selectedFlight.owner.name,
         type: "bot",
         sourceDocuments: null,
       },
@@ -204,8 +262,11 @@ const Memory = () => {
               showbutton={showbutton}
               confirmBooking={confirmBooking}
               selectedSeat={selectedSeat}
+              selectedFlight={selectedFlight}
               isModalOpen={isModalOpen}
               ConfirmMainBooking={ConfirmMainBooking}
+              seats={seats}
+              handleSeatSelectionBtn={handleSeatSelectionBtn}
             />
             <PromptBox
               prompt={prompt}
