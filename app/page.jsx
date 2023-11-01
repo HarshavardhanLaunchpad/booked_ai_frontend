@@ -48,13 +48,16 @@ const Memory = () => {
         date_from: date_from,
       };
       console.log({ input: prompt, firstMsg, data });
-      const response = await fetch("http://localhost:8000/api/ai/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ input: prompt, firstMsg, data: data }),
-      });
+      const response = await fetch(
+        "https://booked-ai-backend-qaa-zfovmbopdq-uc.a.run.app/api/ai/chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ input: prompt, firstMsg, data: data }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP Error! Status: ${response.status}`);
@@ -104,13 +107,16 @@ const Memory = () => {
 
   const handleFlightClick = async (index, price, item) => {
     setSelectedFlight(item);
-    const response = await fetch("http://localhost:8000/api/ai/seats", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ selected_flight: item }),
-    });
+    const response = await fetch(
+      "https://booked-ai-backend-qaa-zfovmbopdq-uc.a.run.app/api/ai/seats",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ selected_flight: item }),
+      }
+    );
     const searchRes = await response.json();
     console.log("eeeeddd", response);
     // setShowButtons(false);
@@ -171,7 +177,7 @@ const Memory = () => {
 
   const confirmBooking = async () => {
     // setModalOpen(true);
-    // const response = await fetch("http://localhost:8000/api/ai/bookflight", {
+    // const response = await fetch("https://booked-ai-backend-qaa-zfovmbopdq-uc.a.run.app/api/ai/bookflight", {
     //   method: "POST",
     //   headers: {
     //     "Content-Type": "application/json",
@@ -184,13 +190,19 @@ const Memory = () => {
     //   ...prevMessages,
     //   { text: searchRes.response, type: "bot", sourceDocuments: null },
     // ]);
-    const response = await fetch("http://localhost:8000/api/ai/bookflight", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ data: selectedSeat, selectedId: selectedSeat.id }),
-    });
+    const response = await fetch(
+      "https://booked-ai-backend-qaa-zfovmbopdq-uc.a.run.app/api/ai/bookflight",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: selectedSeat,
+          selectedId: selectedSeat.id,
+        }),
+      }
+    );
     const searchRes = await response.json();
     setShowButtons(false);
     setMessages((prevMessages) => [
@@ -204,16 +216,19 @@ const Memory = () => {
   };
 
   const ConfirmMainBooking = async () => {
-    const response = await fetch("http://localhost:8000/api/ai/create-order", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        selected_offer: selectedFlight,
-        available_seat_service: selectedSeat.available_services[0],
-      }),
-    });
+    const response = await fetch(
+      "https://booked-ai-backend-qaa-zfovmbopdq-uc.a.run.app/api/ai/create-order",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          selected_offer: selectedFlight,
+          available_seat_service: selectedSeat.available_services[0],
+        }),
+      }
+    );
     const searchRes = await response.json();
     setShowButtons(false);
     setMessages((prevMessages) => [
